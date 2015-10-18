@@ -65,6 +65,7 @@ void setupEcho() {
   pinMode(echoWest, INPUT);
   pinMode(echoUp, INPUT);
   pinMode(echoDown, INPUT);
+  
   Serial.print("Sensor setup complete");
   Serial.println();
 }
@@ -72,29 +73,30 @@ void setupEcho() {
 /*
  * Gets the distance of all 7 sonars
  * 0 = N, 1 = NE, 2 = NW, 3 = E, 4 = W, 5 = Up, 6 = Down
- * delay of 40 microseconds to make sure there are no lingering triggers
+ * delay of 40 milliseconds to make sure there are no lingering triggers
  */
 void getDistance(long *distance) {
     distance[0] = getDistance(echoNorth);
-	delay(40);
+  delay(40);
     
     //do east/west to reduce interfering echos
     distance[3] = getDistance(echoEast);
-	delay(40);
+  delay(40);
     distance[4] = getDistance(echoWest);
-	delay(40);
+  delay(40);
     
     //do ne/nw next to reduce interfering echos
     distance[1] = getDistance(echoNorthEast);
-	delay(40);
+  delay(40);
     distance[2] = getDistance(echoNorthWest);
-	delay(40);
+  delay(40);
 
     //up and down should not interfere with each other
     distance[5] = getDistance(echoUp);
-	delay(40);
+  delay(40);
     distance[6] = getDistance(echoDown);
-	delay(40);
+  delay(40);
+  
     Serial.print("All distances calculated");
     Serial.println();
 }
@@ -127,7 +129,6 @@ long getDistance(int echoPin) {
 
   Serial.println();
   //from the HC-SR04 specs, pulse width(μs)/148 = distance(inches)
-  //50 microsecond timeout, specs say 50ms or no signal
-  return pulseIn(echoPin, HIGH, 50) / 148;
+  //40 milliseconds timeout, specs say 38ms or no signal
+  return pulseIn(echoPin, HIGH, 40000) / 148;
 }
-
