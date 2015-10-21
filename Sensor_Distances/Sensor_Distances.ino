@@ -8,7 +8,7 @@
 /*
  * All triggers should be on the same pin
  * Each echo has it's own pin
-*/
+ */
 const int echoTrigger = 1;
 const int echoNorth = 2;
 const int echoNorthEast = 3;
@@ -48,14 +48,15 @@ void loop() {
     else if (i == 6)
       Serial.print("Down:      ");
       
-    Serial.print(distance[i]);
-    Serial.println();    
+    Serial.println(distance[i]);
   }
   
   Serial.println();
 }
 
-//sets up the pins for the sonar sensors
+/*
+ * sets up the pins for the sonar sensors
+ */
 void setupEcho() {
   pinMode(echoTrigger, OUTPUT);
   pinMode(echoNorth, INPUT);
@@ -66,39 +67,37 @@ void setupEcho() {
   pinMode(echoUp, INPUT);
   pinMode(echoDown, INPUT);
   
-  Serial.print("Sensor setup complete");
-  Serial.println();
+  Serial.println("Sensor setup complete");
 }
 
 /*
  * Gets the distance of all 7 sonars
  * 0 = N, 1 = NE, 2 = NW, 3 = E, 4 = W, 5 = Up, 6 = Down
  * delay of 40 milliseconds to make sure there are no lingering triggers
+ * Worst case senario delay of up to roughly half a second (560ms)
  */
 void getDistance(long *distance) {
-    distance[0] = getDistance(echoNorth);
+  //do north/east/west to reduce interfering echos
+  distance[0] = getDistance(echoNorth);
   delay(40);
-    
-    //do east/west to reduce interfering echos
-    distance[3] = getDistance(echoEast);
+  distance[3] = getDistance(echoEast);
   delay(40);
-    distance[4] = getDistance(echoWest);
-  delay(40);
-    
-    //do ne/nw next to reduce interfering echos
-    distance[1] = getDistance(echoNorthEast);
-  delay(40);
-    distance[2] = getDistance(echoNorthWest);
-  delay(40);
-
-    //up and down should not interfere with each other
-    distance[5] = getDistance(echoUp);
-  delay(40);
-    distance[6] = getDistance(echoDown);
+  distance[4] = getDistance(echoWest);
   delay(40);
   
-    Serial.print("All distances calculated");
-    Serial.println();
+  //do ne/nw next to reduce interfering echos
+  distance[1] = getDistance(echoNorthEast);
+  delay(40);
+  distance[2] = getDistance(echoNorthWest);
+  delay(40);
+  
+  //up and down should not interfere with each other
+  distance[5] = getDistance(echoUp);
+  delay(40);
+  distance[6] = getDistance(echoDown);
+  delay(40);
+  
+  Serial.println("All distances calculated");
 }
 
 /*
@@ -111,24 +110,24 @@ long getDistance(int echoPin) {
   digitalWrite(echoTrigger, LOW);
 
   if (echoPin == echoNorth)
-    Serial.print("Calculating North");
+    Serial.println("Calculating North");
   else if (echoPin == echoNorthEast)
-    Serial.print("Calculating NorthEast");
+    Serial.println("Calculating NorthEast");
   else if (echoPin == echoNorthWest)
-    Serial.print("Calculating NorthWest");
+    Serial.println("Calculating NorthWest");
   else if (echoPin == echoEast)
-    Serial.print("Calculating East");
+    Serial.println("Calculating East");
   else if (echoPin == echoWest)
-    Serial.print("Calculating West");
+    Serial.println("Calculating West");
   else if (echoPin == echoUp)
-    Serial.print("Calculating Up");
+    Serial.println("Calculating Up");
   else if (echoPin == echoDown)
-    Serial.print("Calculating Down");
+    Serial.println("Calculating Down");
   else
-    Serial.print("Calculating ERROR");
+    Serial.println("Calculating ERROR");
 
-  Serial.println();
   //from the HC-SR04 specs, pulse width(μs)/148 = distance(inches)
   //40 milliseconds timeout, specs say 38ms or no signal
   return pulseIn(echoPin, HIGH, 40000) / 148;
 }
+
