@@ -1,3 +1,6 @@
+#include <I2Cdev.h>
+#include <MPU6050.h>
+
 /*
  * Created by Stanley Wang
  * 10/28/15
@@ -16,19 +19,25 @@
 
 #include<Wire.h>
 
-// I2C address of the MPU-6050 for AD0 -> GND
+// I2C address of the MPU-6050 
+// AD0 -> GND for 0x68
+// AD0 -> 5V for 0x69
 const int MPU = 0x68;
 
 // We do not want our quadcopter going past this pitch/roll angle
-const int MAX_ANGLE = 45;
+const int MAX_ANGLE = 20;
 
 // Max and min pulsewidth we can give the esc
-// Change min later to pulse width to hover
+// Manually determine the hover pulse by test and trial
 const int MAX_PULSE = 2000;
 const int MIN_PULSE = 1000;
+const int HOVER_PULSE = 1500;
 
 // Stores acccelerometer Data from MPU 6050
 long accX, accY, accZ;
+
+//make this a constant later?
+long accXOffset, accYOffset, accZOffset;
 
 void setup() {
   setupMPU();
@@ -43,6 +52,11 @@ void setupMPU() {
   // Turns on MPU-6050
   Wire.write(0);
   Wire.endTransmission(true);
+
+  //set accelerometer offset
+  accXOffset = 0;
+  accYOffset = 0;
+  accZOffset = 0;
 }
 void loop() {
   getMPUData();
@@ -68,11 +82,35 @@ void loop() {
  */
 void control1(float roll, float pitch) {
   // determine fast each motor rotates
-  float motorN = -pitch / MAX_ANGLE * (MAX_PULSE - MIN_PULSE) + MIN_PULSE;
-  float motorE = -roll / MAX_ANGLE * (MAX_PULSE - MIN_PULSE) + MIN_PULSE;
-  float motorS = pitch / MAX_ANGLE * (MAX_PULSE - MIN_PULSE) + MIN_PULSE;
-  float motorW = roll / MAX_ANGLE * (MAX_PULSE - MIN_PULSE) + MIN_PULSE;
+  float motorN = -pitch / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) + HOVER_PULSE;
+  float motorE = -roll / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) + HOVER_PULSE;
+  float motorS = pitch / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) + HOVER_PULSE;
+  float motorW = roll / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) + HOVER_PULSE;
 
+  if (motorN < MIN_PULSE) {
+    motorN = MIN_PULSE;
+  } else if (motorN > MAX_PULSE) {
+    motorN = MAX_PULSE;
+  }
+  
+  if (motorE < MIN_PULSE) {
+    motorE = MIN_PULSE;
+  } else if (motorE > MAX_PULSE) {
+    motorE = MAX_PULSE;
+  }
+  
+  if (motorS < MIN_PULSE) {
+    motorS = MIN_PULSE;
+  } else if (motorS > MAX_PULSE) {
+    motorS = MAX_PULSE;
+  }
+  
+  if (motorW < MIN_PULSE) {
+    motorW = MIN_PULSE;
+  } else if (motorW > MAX_PULSE) {
+    motorW = MAX_PULSE;
+  }
+  
   Serial.println();
   Serial.print("\t"); Serial.println(motorN);
   Serial.print(motorW); Serial.print("\t\t\t"); Serial.println(motorE);
@@ -81,7 +119,7 @@ void control1(float roll, float pitch) {
 }
 
 /*
- * Untested
+ * Tested and works
  * MotorNW            MotorNE
  *          Center
  * MotorSW            MotorSE
@@ -91,14 +129,37 @@ void control2(float roll, float pitch) {
   float total = abs(roll) + abs(pitch);
 
   // determine fast each motor rotates
-  float motorNW = (abs(pitch) / total) * -pitch / MAX_ANGLE * (MAX_PULSE - MIN_PULSE) 
-                  (abs(roll) / total) * roll / MAX_ANGLE * (MAX_PULSE - MIN_PULSE) + MIN_PULSE;
-  float motorNE = (abs(pitch) / total) * -pitch / MAX_ANGLE * (MAX_PULSE - MIN_PULSE)
-                  (abs(roll) / total) * -roll / MAX_ANGLE * (MAX_PULSE - MIN_PULSE) + MIN_PULSE;
-  float motorSW = (abs(pitch) / total) * pitch / MAX_ANGLE * (MAX_PULSE - MIN_PULSE)
-                  (abs(roll) / total) * roll / MAX_ANGLE * (MAX_PULSE - MIN_PULSE) + MIN_PULSE;
-  float motorSE = (abs(pitch) / total) * pitch / MAX_ANGLE * (MAX_PULSE - MIN_PULSE)
-                  (abs(roll) / total) * -roll / MAX_ANGLE * (MAX_PULSE - MIN_PULSE) + MIN_PULSE;
+  float motorNW = (abs(pitch) / total) * -pitch / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) +
+                  (abs(roll) / total) * roll / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) + HOVER_PULSE;
+  float motorNE = (abs(pitch) / total) * -pitch / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) +
+                  (abs(roll) / total) * -roll / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) + HOVER_PULSE;
+   float motorSE = (abs(pitch) / total) * pitch / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) +
+                  (abs(roll) / total) * -roll / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) + HOVER_PULSE;
+  float motorSW = (abs(pitch) / total) * pitch / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) +
+                  (abs(roll) / total) * roll / MAX_ANGLE * (MAX_PULSE - HOVER_PULSE) + HOVER_PULSE;
+ if (motorNW < MIN_PULSE) {
+    motorNW = MIN_PULSE;
+  } else if (motorNW > MAX_PULSE) {
+    motorNW = MAX_PULSE;
+  }
+  
+  if (motorNE < MIN_PULSE) {
+    motorNE = MIN_PULSE;
+  } else if (motorNE > MAX_PULSE) {
+    motorNE = MAX_PULSE;
+  }
+  
+  if (motorSE < MIN_PULSE) {
+    motorSE = MIN_PULSE;
+  } else if (motorSE > MAX_PULSE) {
+    motorSE = MAX_PULSE;
+  }
+  
+  if (motorSW < MIN_PULSE) {
+    motorSW = MIN_PULSE;
+  } else if (motorSW > MAX_PULSE) {
+    motorSW = MAX_PULSE;
+  }
 
   Serial.println();
   Serial.print(motorNW); Serial.print("\t\t\t"); Serial.println(motorNE);

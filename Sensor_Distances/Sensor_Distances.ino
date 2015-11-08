@@ -38,6 +38,13 @@ const int UP_TRIGGER_PIN = 9;
 const int DOWN_ECHO_PIN = 7;
 const int DOWN_TRIGGER_PIN = 9;
 
+// All sensors share the same toggle trigger pin
+// Each sensor has its own echo pin
+// The echo and trigger on the sensor share the same pin to save space
+const int TRIGGER_PIN = 1;
+const int 
+
+
 /*
  * Distance for each echo
  * 0 = N, 1 = NE, 2 = NW, 3 = E, 4 = W, 5 = Up, 6 = Down
@@ -102,6 +109,10 @@ void setupEcho() {
   digitalWrite(WEST_TRIGGER_PIN, LOW);
   digitalWrite(UP_TRIGGER_PIN, LOW);
   digitalWrite(DOWN_TRIGGER_PIN, LOW);
+
+  pinMode(TRIGGER_PIN, OUTPUT);
+  // make sure that its not on at first
+  digitalWrite(TRIGGER_PIN, LOW);
   
   Serial.println("Sensor setup complete");
 }
@@ -144,3 +155,25 @@ long getDistance(int triggerPin, int echoPin) {
   return pulseIn(echoPin, HIGH, 40000) / 148;
 }
 
+/*
+ * Gets a single distance back (in inches) 
+ * Trigger and echo pins are the same
+ */
+long getDistance(int pin) {
+  pinMode(pin, OUTPUT);
+  //Make sure its low before sending out pulses
+  digitalWrite(TRIGGER_PIN, LOW);
+  digitalWrite(pin, LOW);
+  delayMicroseconds(3);
+  digitalWrite(TRIGGER_PIN, HIGH);
+  digitalWrite(pin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIGGER_PIN, LOW);
+  digitalWrite(pin, LOW);
+  pinMode(pin, INPUT);
+  
+  //from the HC-SR04 specs, pulse width(μs)/148 = distance(inches)
+  //40 milliseconds timeout, specs say 38ms or no signal
+  return pulseIn(pin, HIGH, 40000) / 148;
+}
+ 
